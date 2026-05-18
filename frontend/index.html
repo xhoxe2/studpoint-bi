@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stud-Point — Business Intelligence</title>
+<meta name="description" content="Аналітичний звіт по компанії: скоринг, проблеми, конкуренти, рекомендовані послуги Stud-Point." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..800,0..100;1,9..144,300..800,0..100&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+          sans:  ['Geist', 'ui-sans-serif', 'system-ui'],
+          mono:  ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          paper:  '#ffffff',
+          paper2: '#f6f6f4',
+          ink:    '#18181b',
+          ink2:   '#52525b',
+          ink3:   '#a1a1aa',
+          rule:   '#18181b',
+          clay:   '#8b3a1f',
+          ochre:  '#b8862f',
+          moss:   '#2d5a3d',
+        },
+      },
+    },
+  }
+</script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="font-sans bg-paper text-ink antialiased">
+
+<div class="grain-overlay"></div>
+
+<div x-data="analyzer()" x-cloak>
+
+<!-- ============ ВЕРХНЯ ПЛАНКА (без логотипа) ============ -->
+<header class="border-b border-ink/15">
+  <div class="max-w-[1400px] mx-auto px-6 lg:px-12 py-4 flex items-center justify-between text-[11px] uppercase tracking-[0.22em]">
+    <div class="flex items-center gap-6">
+      <span class="font-semibold">STUD<span class="text-clay">·</span>POINT</span>
+      <span class="text-ink2 hidden sm:inline">Business Intelligence</span>
+    </div>
+    <div class="flex items-center gap-6 text-ink2">
+      <span class="hidden md:inline" x-text="dateString()"></span>
+      <a href="https://stud-point.com/services/partner/#partnerbtn" target="_blank" class="link-underline hover:text-ink">Партнерство</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section x-show="view === 'hero'" x-transition.opacity.duration.500ms class="relative">
+
+  <div class="max-w-[1400px] mx-auto px-6 lg:px-12 pt-16 pb-24">
+
+    <!-- Маленький eyebrow -->
+    <div data-anim="h1" class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-10">
+      Випуск № <span class="font-mono" x-text="issueNumber()"></span> · AI Бізнес-Аналітика
+    </div>
+
+    <!-- Великий заголовок з мішаним roman/italic, у газетному стилі -->
+    <h1 data-anim="h2" class="font-serif font-light leading-[0.95] tracking-[-0.02em] text-[64px] sm:text-[88px] lg:text-[124px] mb-12">
+      Анатомія<br/>
+      <span class="italic font-normal" style="font-variation-settings:'opsz' 144, 'SOFT' 30;">компанії<span class="text-clay">.</span></span>
+    </h1>
+
+    <!-- Розділювач + дрібний підпис -->
+    <div class="grid grid-cols-12 gap-8 items-start">
+      <div class="col-span-12 lg:col-span-5">
+        <div class="h-px bg-ink mb-6"></div>
+        <p data-anim="h3" class="font-serif text-[22px] lg:text-[24px] leading-[1.45] text-ink2 max-w-md">
+          Введіть назву — отримаєте звіт у форматі редакційної аналітики: скоринг&nbsp;0–100,
+          п'ять напрямів, конкретні проблеми з доказами, бенчмарк проти конкурентів і
+          рекомендації послуг Stud-Point.
+        </p>
+      </div>
+
+      <!-- Форма у мінімалістичному стилі -->
+      <div class="col-span-12 lg:col-span-7 lg:pl-8">
+        <form data-anim="h4" @submit.prevent="run()" class="space-y-8">
+
+          <label class="block">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">01 — Компанія</div>
+            <input
+              x-model="company"
+              type="text"
+              placeholder="Київстар, Сільпо, Monobank…"
+              class="ed-input font-serif text-[40px] lg:text-[52px]"
+              autofocus
+            />
+          </label>
+
+          <label class="block">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">02 — Сайт <span class="text-ink3 normal-case tracking-normal">(опціонально)</span></div>
+            <input
+              x-model="website"
+              type="text"
+              placeholder="example.com"
+              class="ed-input font-mono text-[18px] lg:text-[20px]"
+            />
+          </label>
+
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+            <button type="submit" :disabled="!company.trim()" class="btn-ink group">
+              <span>Сформувати звіт</span>
+              <svg class="transition-transform group-hover:translate-x-1" width="18" height="14" viewBox="0 0 24 18" fill="none">
+                <path d="M1 9h22M16 1l8 8-8 8" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              </svg>
+            </button>
+
+            <button type="button" @click="openCompare()" class="btn-ghost">Порівняти 2 компанії</button>
+
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2">або:</div>
+            <div class="flex flex-wrap gap-3">
+              <template x-for="ex in ['Київстар','Нова Пошта','Сільпо','Monobank']">
+                <button @click="company = ex; run()" class="chip-ed" x-text="ex"></button>
+              </template>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Декоративна нижня сітка з трьома стовпцями (як зміст журналу) -->
+    <div data-anim="h5" class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 pt-10 border-t border-ink/15">
+      <div>
+        <div class="font-mono text-[11px] text-ink3 mb-2">§ I</div>
+        <div class="font-serif text-[22px] leading-tight mb-2">Скоринг 0–100</div>
+        <p class="text-[14px] text-ink2 leading-relaxed">
+          Загальний бал та оцінка п'яти напрямів — сайт, SEO, соцмережі, HR-бренд, репутація.
+        </p>
+      </div>
+      <div>
+        <div class="font-mono text-[11px] text-ink3 mb-2">§ II</div>
+        <div class="font-serif text-[22px] leading-tight mb-2">Бенчмарк <span class="italic">проти</span> ринку</div>
+        <p class="text-[14px] text-ink2 leading-relaxed">
+          Два-три конкуренти з оціночним балом. Видно одразу, де компанія програє.
+        </p>
+      </div>
+      <div>
+        <div class="font-mono text-[11px] text-ink3 mb-2">§ III</div>
+        <div class="font-serif text-[22px] leading-tight mb-2">Послуги <span class="italic">під</span> проблеми</div>
+        <p class="text-[14px] text-ink2 leading-relaxed">
+          На кожну виявлену проблему — конкретна послуга Stud-Point і можливий КПІ
+          з дисклеймером.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARE FORM ============ -->
+<section x-show="view === 'compare-form'" x-transition.opacity.duration.400ms class="max-w-[1100px] mx-auto px-6 lg:px-12 pt-12 pb-24 relative z-10">
+  <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-6">Порівняння двох компаній</div>
+  <h2 class="font-serif font-light text-[48px] lg:text-[80px] leading-[0.95] tracking-tight mb-12">
+    Хто <span class="italic">сильніший</span><span class="text-clay">?</span>
+  </h2>
+
+  <form @submit.prevent="runCompare()" class="grid md:grid-cols-2 gap-10">
+    <label class="block">
+      <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">Компанія A</div>
+      <input x-model="compareA" type="text" placeholder="напр. Sense Bank"
+             class="ed-input font-serif text-[36px] lg:text-[40px]" autofocus />
+    </label>
+    <label class="block">
+      <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">Компанія B</div>
+      <input x-model="compareB" type="text" placeholder="напр. Monobank"
+             class="ed-input font-serif text-[36px] lg:text-[40px]" />
+    </label>
+
+    <div class="md:col-span-2 flex flex-wrap gap-4 pt-4">
+      <button type="submit" :disabled="!compareA.trim() || !compareB.trim()" class="btn-ink">
+        Порівняти →
+      </button>
+      <button type="button" @click="view='hero'; $nextTick(()=>animateHero())" class="btn-ghost">скасувати</button>
+      <p class="font-serif italic text-[14px] text-ink2 max-w-md mt-2">
+        Запустить два повних аналізи паралельно. Займе ~60–90 секунд. Звіти буде показано side-by-side.
+      </p>
+    </div>
+  </form>
+</section>
+
+<!-- ============ COMPARE RESULTS ============ -->
+<section x-show="view === 'compare-results' && compareData" x-transition.opacity.duration.500ms class="max-w-[1600px] mx-auto px-6 lg:px-12 pt-12 pb-32 relative z-10">
+  <div class="flex items-baseline gap-6 mb-10">
+    <div class="text-[11px] uppercase tracking-[0.32em] text-ink2">Side-by-side</div>
+    <button @click="reset()" class="font-mono text-[11px] uppercase tracking-widest text-ink2 hover:text-clay transition border-b border-ink/30 hover:border-clay">← Новий аналіз</button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-8 lg:gap-16 mb-10">
+    <template x-for="(rep, side) in {A: compareData?.A, B: compareData?.B}" :key="side">
+      <div>
+        <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-2">
+          Сторона <span x-text="side"></span>
+        </div>
+        <div class="font-serif font-light text-[40px] lg:text-[64px] leading-[0.9] tracking-tight mb-4">
+          <span x-text="rep?.company?.name || '—'"></span><span class="italic text-clay">.</span>
+        </div>
+        <div class="flex items-baseline gap-4 mb-6">
+          <div class="font-serif font-light text-[80px] leading-none tracking-tight"
+               :style="`color:${scoreColor(rep?.overall_score || 0)}`"
+               x-text="rep?.overall_score ?? '—'"></div>
+          <div class="font-mono text-[12px] text-ink2 pb-3">/100</div>
+        </div>
+        <div class="text-[14px] text-ink2 max-w-md" x-text="rep?.company?.summary || ''"></div>
+      </div>
+    </template>
+  </div>
+
+  <!-- Виноска: хто виграв -->
+  <div class="bg-paper2 border border-ink/15 p-6 mb-12">
+    <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-3">Підсумок</div>
+    <div class="font-serif text-[22px] lg:text-[28px] leading-[1.3]" x-html="compareVerdict()"></div>
+  </div>
+
+  <!-- Скори 5 категорій side-by-side -->
+  <h3 class="font-serif text-[28px] mb-4 tracking-tight">Скоринг по напрямах<span class="italic">.</span></h3>
+  <div class="border-t-2 border-ink mb-10">
+    <template x-for="cat in categoryList()" :key="cat.key">
+      <div class="grid grid-cols-12 gap-4 py-5 border-b border-ink/15 items-center">
+        <div class="col-span-3 lg:col-span-2">
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3" x-text="cat.num"></div>
+          <div class="font-serif text-[20px]" x-text="cat.label"></div>
+        </div>
+
+        <div class="col-span-4">
+          <div class="flex items-baseline gap-2">
+            <div class="font-serif font-light text-[36px] leading-none"
+                 :style="`color:${scoreColor(compareData?.A?.scores?.[cat.key] || 0)}`"
+                 x-text="compareData?.A?.scores?.[cat.key] ?? '—'"></div>
+          </div>
+          <div class="h-[2px] bg-ink/10 mt-2">
+            <div class="h-full score-fill"
+                 :style="`width:${compareData?.A?.scores?.[cat.key] || 0}%; background:${scoreColor(compareData?.A?.scores?.[cat.key] || 0)}`"></div>
+          </div>
+        </div>
+
+        <div class="col-span-2 text-center">
+          <div class="font-mono text-[14px] font-bold"
+               :class="compareDeltaColor(cat.key)" x-text="compareDeltaText(cat.key)"></div>
+        </div>
+
+        <div class="col-span-3 text-right">
+          <div class="font-serif font-light text-[36px] leading-none"
+               :style="`color:${scoreColor(compareData?.B?.scores?.[cat.key] || 0)}`"
+               x-text="compareData?.B?.scores?.[cat.key] ?? '—'"></div>
+          <div class="h-[2px] bg-ink/10 mt-2">
+            <div class="h-full score-fill ml-auto"
+                 :style="`width:${compareData?.B?.scores?.[cat.key] || 0}%; background:${scoreColor(compareData?.B?.scores?.[cat.key] || 0)}`"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- Проблеми та вакансії side-by-side -->
+  <div class="grid grid-cols-2 gap-8 lg:gap-16">
+    <template x-for="(rep, side) in {A: compareData?.A, B: compareData?.B}" :key="'p'+side">
+      <div>
+        <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-3">
+          Топ проблеми · <span x-text="rep?.company?.name"></span>
+        </div>
+        <ul class="space-y-3 mb-8">
+          <template x-for="(p, i) in (rep?.problems || []).slice(0,4)" :key="i">
+            <li class="border-l-2 pl-3"
+                :style="`border-color:${p.severity==='high'?'var(--clay)':p.severity==='medium'?'var(--ochre)':'var(--moss)'}`">
+              <div class="font-serif text-[15px] leading-snug" x-text="p.title"></div>
+              <div class="text-[11px] text-ink3 font-mono uppercase tracking-wider mt-1" x-text="p.category"></div>
+            </li>
+          </template>
+        </ul>
+
+        <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-3">Відкриті вакансії</div>
+        <div class="flex items-baseline gap-2">
+          <div class="font-serif font-light text-[48px]"
+               x-text="(rep?._meta?.vacancies_scraped?.total) ?? (rep?._meta?.vacancies_estimate?.total_approx) ?? '—'"></div>
+          <div class="font-mono text-[11px] text-ink3">сумарно</div>
+        </div>
+      </div>
+    </template>
+  </div>
+</section>
+
+<!-- ============ LOADING ============ -->
+<section x-show="view === 'loading'" x-transition.opacity.duration.400ms class="max-w-[1400px] mx-auto px-6 lg:px-12 py-32">
+  <div class="grid grid-cols-12 gap-8 items-end mb-16">
+    <div class="col-span-12 lg:col-span-7">
+      <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-6">Звіт формується</div>
+      <h2 class="font-serif font-light text-[56px] lg:text-[84px] leading-[0.95] tracking-tight">
+        <span x-text="company"></span><span class="italic text-clay">.</span>
+      </h2>
+    </div>
+    <div class="col-span-12 lg:col-span-5">
+      <div class="flex items-baseline justify-between mb-3">
+        <div class="font-mono text-[12px] text-ink2 uppercase tracking-widest" x-text="loadingStep"></div>
+        <div class="font-mono text-[12px] text-ink3 uppercase tracking-widest">
+          <span x-text="String(elapsedSec).padStart(2,'0')"></span><span class="text-ink3">с</span>
+        </div>
+      </div>
+      <div class="h-px bg-ink/15 relative overflow-hidden">
+        <div class="absolute inset-y-0 left-0 bg-ink load-bar"></div>
+      </div>
+      <div class="mt-4 text-[13px] text-ink2 leading-relaxed font-serif italic" x-text="loadingHint()"></div>
+    </div>
+  </div>
+
+  <!-- Список стадій з галочками -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 max-w-3xl font-mono text-[12px] text-ink2 uppercase tracking-widest">
+    <template x-for="(s, i) in loadingSteps" :key="i">
+      <div class="flex items-center gap-3">
+        <span class="w-4 inline-block" x-text="loadingIndex >= i ? '◼' : '◻'" :class="loadingIndex >= i ? 'text-ink' : 'text-ink3'"></span>
+        <span :class="loadingIndex >= i ? 'text-ink' : 'text-ink3'" x-text="s"></span>
+      </div>
+    </template>
+  </div>
+</section>
+
+<!-- ============ ERROR ============ -->
+<section x-show="view === 'error'" x-transition.opacity.duration.300ms class="max-w-[800px] mx-auto px-6 py-32 text-center">
+  <div class="text-[11px] uppercase tracking-[0.32em] text-clay mb-4">Помилка</div>
+  <h2 class="font-serif font-light text-5xl mb-6 italic">Не вдалося сформувати звіт.</h2>
+  <p class="text-ink2 mb-10" x-text="error"></p>
+  <button @click="reset()" class="btn-ink">Спробувати ще</button>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section x-show="view === 'results' && report" x-transition.opacity.duration.500ms class="max-w-[1400px] mx-auto px-6 lg:px-12 pt-12 pb-32">
+
+  <!-- Cover-блок звіту -->
+  <!-- ============ CONFIRMATION BANNER ============ -->
+  <div data-anim="r-confirm" class="mb-10" x-show="report?._meta?.website_found">
+    <div class="grid grid-cols-12 gap-4 py-5 px-6 border-t border-b border-ink/20 bg-paper2/40 items-center">
+      <div class="col-span-12 lg:col-span-7 flex items-baseline gap-4 flex-wrap">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-ink2">Аналізую сайт</div>
+        <template x-if="!websiteEdit">
+          <div class="flex items-baseline gap-3 flex-wrap">
+            <a :href="report?._meta?.website_found" target="_blank"
+               class="font-serif text-[20px] hover:text-clay transition border-b border-ink/40 hover:border-clay"
+               x-text="report?._meta?.website_found || '—'"></a>
+            <span class="font-mono text-[10px] uppercase tracking-widest"
+                  :class="websiteSourceColor()" x-text="websiteSourceLabel()"></span>
+          </div>
+        </template>
+        <template x-if="websiteEdit">
+          <div class="flex items-baseline gap-3 flex-wrap w-full">
+            <input x-model="websiteEditValue" type="text" placeholder="https://..."
+                   class="ed-input flex-1 min-w-[280px] font-mono text-[16px]"
+                   @keydown.enter="reanalyzeWithUrl()" />
+            <button @click="reanalyzeWithUrl()" class="btn-ink" :disabled="!websiteEditValue.trim()">
+              <span>Перезапустити</span>
+            </button>
+            <button @click="websiteEdit=false" class="btn-ghost">Скасувати</button>
+          </div>
+        </template>
+      </div>
+      <div class="col-span-12 lg:col-span-5 text-right" x-show="!websiteEdit">
+        <button @click="startWebsiteEdit()"
+                class="font-mono text-[11px] uppercase tracking-[0.22em] text-ink2 hover:text-clay transition border-b border-ink/40 hover:border-clay pb-0.5">
+          Не той сайт? Вказати правильний →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREENSHOT головної ============ -->
+  <div data-anim="r-screen" class="mb-12" x-show="report?._meta?.website_found">
+    <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-3">
+      Як виглядає сайт <span x-text="report?._meta?.website_found"></span>
+    </div>
+    <div class="border border-ink/15 overflow-hidden bg-paper2">
+      <img :src="siteScreenshot()"
+           :alt="report?.company?.name"
+           class="w-full block"
+           loading="lazy"
+           onerror="this.parentElement.style.display='none'" />
+    </div>
+    <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mt-2">
+      Знімок · thum.io · live render
+    </div>
+  </div>
+
+  <div data-anim="r-cover" class="grid grid-cols-12 gap-8 pb-12 border-b border-ink/30">
+    <div class="col-span-12 lg:col-span-7">
+      <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-6 flex items-center gap-3">
+        <span>Звіт № <span class="font-mono" x-text="issueNumber()"></span></span>
+        <span class="text-ink3">·</span>
+        <span x-text="dateString()"></span>
+      </div>
+      <h2 class="font-serif font-light text-[64px] lg:text-[104px] leading-[0.92] tracking-[-0.02em] mb-8">
+        <span x-text="report?.company?.name"></span><span class="italic text-clay">.</span>
+      </h2>
+      <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-6">
+        <span x-text="report?.company?.industry"></span>
+        <span class="text-ink3 mx-2">/</span>
+        <span x-text="report?.company?.country"></span>
+      </div>
+      <p class="font-serif text-[20px] lg:text-[22px] leading-[1.5] text-ink max-w-xl" x-text="report?.company?.summary"></p>
+    </div>
+
+    <!-- Загальний скор -->
+    <div class="col-span-12 lg:col-span-5 lg:pl-8 lg:border-l border-ink/15">
+      <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-6">Загальний бал</div>
+      <div class="flex items-baseline gap-6 mb-6">
+        <div class="font-serif font-light text-[180px] lg:text-[220px] leading-[0.8] tracking-[-0.04em]"
+             :style="`color:${scoreColor(report?.overall_score || 0)}`">
+          <span x-text="report?.overall_score ?? '—'"></span>
+        </div>
+        <div class="font-mono text-[14px] text-ink2 pb-6">/100</div>
+      </div>
+      <div class="h-px bg-ink/15 relative">
+        <div class="absolute inset-y-0 left-0 bg-ink score-fill"
+             :style="`width:${report?.overall_score || 0}%; height:2px; top:-0.5px; background:${scoreColor(report?.overall_score || 0)}`"></div>
+      </div>
+      <div class="mt-4 font-mono text-[11px] uppercase tracking-widest text-ink2" x-text="scoreVerdict(report?.overall_score || 0)"></div>
+    </div>
+  </div>
+
+  <!-- П'ять напрямів — як таблиця у газеті -->
+  <div data-anim="r-scores" class="mt-20">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-10">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 01</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          П'ять напрямів<span class="italic">.</span>
+        </h3>
+      </div>
+    </div>
+
+    <div class="border-t border-ink/30">
+      <template x-for="cat in categoryList()" :key="cat.key">
+        <div class="score-row grid grid-cols-12 gap-8 py-8 border-b border-ink/15 items-center">
+          <div class="col-span-12 lg:col-span-3">
+            <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-1" x-text="cat.num"></div>
+            <div class="font-serif text-[28px] tracking-tight" x-text="cat.label"></div>
+          </div>
+          <div class="col-span-7 lg:col-span-6">
+            <div class="h-[2px] bg-ink/10 relative">
+              <div class="absolute inset-y-0 left-0 score-fill"
+                   :style="`width:${report?.scores?.[cat.key] || 0}%; background:${scoreColor(report?.scores?.[cat.key] || 0)}`"></div>
+            </div>
+            <div class="text-[13px] text-ink2 mt-3 leading-relaxed max-w-2xl"
+                 x-text="report?.score_reasoning?.[cat.key]"></div>
+          </div>
+          <div class="col-span-5 lg:col-span-3 text-right">
+            <div class="font-serif font-light text-[64px] leading-[0.9] tracking-tight"
+                 :style="`color:${scoreColor(report?.scores?.[cat.key] || 0)}`">
+              <span x-text="report?.scores?.[cat.key] ?? '—'"></span>
+            </div>
+            <div class="font-mono text-[11px] text-ink3 uppercase tracking-widest" x-text="scoreLabel(report?.scores?.[cat.key] || 0)"></div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- ============ ОБ'ЄКТИВНІ МЕТРИКИ ============ -->
+  <div data-anim="r-metrics" class="mt-24"
+       x-show="hasObjectiveMetrics()">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-12">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 01·B</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          Об'єктивні <span class="italic">метрики</span><span class="text-clay">.</span>
+        </h3>
+        <p class="font-serif text-[18px] text-ink2 mt-3 italic max-w-2xl">
+          Не оцінки моделі — реальні цифри з PageSpeed Insights, dou.ua і Google Search.
+        </p>
+      </div>
+    </div>
+
+    <div class="border-t-2 border-ink">
+
+      <!-- PageSpeed -->
+      <div class="grid grid-cols-12 gap-8 py-8 border-b border-ink/15 items-start"
+           x-show="report?._meta?.pagespeed?.scores">
+        <div class="col-span-12 lg:col-span-3">
+          <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-2">A</div>
+          <div class="font-serif text-[26px] leading-tight">PageSpeed <span class="italic">Insights</span></div>
+          <div class="text-[12px] text-ink3 mt-1 font-mono">Google Lighthouse · mobile</div>
+        </div>
+        <div class="col-span-12 lg:col-span-9 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <template x-for="ps in pagespeedRows()" :key="ps.key">
+            <div>
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1" x-text="ps.label"></div>
+              <div class="font-serif font-light text-[56px] leading-none tracking-tight"
+                   :style="`color:${scoreColor(ps.value)}`" x-text="ps.value"></div>
+              <div class="h-[2px] bg-ink/10 mt-2">
+                <div class="h-full score-fill" :style="`width:${ps.value}%; background:${scoreColor(ps.value)}`"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="col-span-12 mt-2 text-[12px] text-ink2 font-mono"
+             x-show="report?._meta?.pagespeed?.cwv">
+          <span class="text-ink3 mr-3">Core Web Vitals:</span>
+          <template x-for="(v, k) in (report?._meta?.pagespeed?.cwv || {})">
+            <span class="mr-5"><span class="text-ink3" x-text="k"></span> <span x-text="v"></span></span>
+          </template>
+        </div>
+      </div>
+
+      <!-- Вакансії -->
+      <div class="grid grid-cols-12 gap-8 py-8 border-b border-ink/15 items-start"
+           x-show="hasVacanciesData()">
+        <div class="col-span-12 lg:col-span-3">
+          <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-2">B</div>
+          <div class="font-serif text-[26px] leading-tight">Відкриті <span class="italic">вакансії</span></div>
+          <div class="text-[12px] text-ink3 mt-1 font-mono">Сигнал HR-потреби</div>
+        </div>
+        <div class="col-span-12 lg:col-span-6">
+          <div class="flex items-baseline gap-5 flex-wrap">
+            <div class="font-serif font-light text-[72px] leading-none tracking-tight"
+                 :style="`color:${vacancyColor()}`"
+                 x-text="vacanciesTotal() ?? '—'"></div>
+            <div class="font-mono text-[12px] uppercase tracking-widest text-ink2" x-text="vacanciesLabel()"></div>
+          </div>
+
+          <!-- По джерелах -->
+          <ul class="mt-5 space-y-2">
+            <template x-for="row in vacanciesBySource()" :key="row.source">
+              <li class="flex items-baseline justify-between gap-4 text-[14px] border-b border-ink/10 pb-2">
+                <div class="flex items-baseline gap-3">
+                  <span class="font-mono text-[11px] uppercase tracking-widest text-ink3" x-text="row.source"></span>
+                  <span class="text-[9px] uppercase tracking-widest font-mono px-1.5 py-0.5 border"
+                        :class="row.mode === 'direct'
+                          ? 'text-moss border-moss/40'
+                          : 'text-ochre border-ochre/40'"
+                        x-text="row.mode === 'direct' ? 'API' : 'оцінка'"></span>
+                </div>
+                <span class="font-serif text-[24px] font-light" x-text="row.count"></span>
+              </li>
+            </template>
+          </ul>
+
+          <div class="text-[11px] text-ink3 mt-3 italic leading-relaxed">
+            <span class="text-moss font-mono uppercase tracking-widest">API</span> = пряма цифра з API/HTML.
+            <span class="text-ochre font-mono uppercase tracking-widest">оцінка</span> = AI-пошук у Google.
+            <span class="block mt-1" x-show="report?._meta?.vacancies_scraped?.note" x-text="report?._meta?.vacancies_scraped?.note"></span>
+          </div>
+        </div>
+        <div class="col-span-12 lg:col-span-3">
+          <div class="bg-paper2 border border-ink/15 p-5">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-2">Висновок AI</div>
+            <p class="text-[14px] leading-relaxed italic" x-text="report?._meta?.hiring_insight || '—'"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Соцмережі -->
+      <div class="grid grid-cols-12 gap-8 py-8 border-b border-ink/15 items-start"
+           x-show="Object.keys(report?._meta?.socials || {}).length">
+        <div class="col-span-12 lg:col-span-3">
+          <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-2">C</div>
+          <div class="font-serif text-[26px] leading-tight">Соцмережі</div>
+          <div class="text-[12px] text-ink3 mt-1 font-mono">Знайдені / підтверджені</div>
+        </div>
+        <div class="col-span-12 lg:col-span-9">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <template x-for="(url, net) in (report?._meta?.socials || {})" :key="net">
+              <a :href="url" target="_blank" class="block p-4 border border-ink/15 hover:border-clay hover:bg-paper2/50 transition group">
+                <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1">
+                  <span x-text="socialSource(net)"></span>
+                </div>
+                <div class="font-serif text-[18px] capitalize group-hover:text-clay transition" x-text="net"></div>
+                <div class="text-[10px] text-ink3 font-mono mt-1 break-all" x-text="shortUrl(url)"></div>
+              </a>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Тональність новин — зведення -->
+      <div class="grid grid-cols-12 gap-8 py-8 border-b border-ink/15 items-start"
+           x-show="(report?._meta?.news_sentiment_stats?.total || 0) > 0">
+        <div class="col-span-12 lg:col-span-3">
+          <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-2">D</div>
+          <div class="font-serif text-[26px] leading-tight">Тональність <span class="italic">згадок</span></div>
+          <div class="text-[12px] text-ink3 mt-1 font-mono">AI-класифікація заголовків</div>
+        </div>
+        <div class="col-span-12 lg:col-span-9 grid grid-cols-3 gap-6">
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-moss mb-1">позитивні</div>
+            <div class="font-serif font-light text-[64px] leading-none text-moss"
+                 x-text="report?._meta?.news_sentiment_stats?.positive ?? 0"></div>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1">нейтральні</div>
+            <div class="font-serif font-light text-[64px] leading-none text-ink2"
+                 x-text="report?._meta?.news_sentiment_stats?.neutral ?? 0"></div>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-clay mb-1">негативні</div>
+            <div class="font-serif font-light text-[64px] leading-none text-clay"
+                 x-text="report?._meta?.news_sentiment_stats?.negative ?? 0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ЮР-ФАКТИ ============ -->
+  <div data-anim="r-legal" class="mt-24" x-show="hasLegalInfo()">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-12">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 01·C</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          Юридичні <span class="italic">факти</span><span class="text-clay">.</span>
+        </h3>
+        <p class="font-serif text-[18px] text-ink2 mt-3 italic max-w-2xl">
+          Знайдено AI у відкритих реєстрах і медіа. ЄДРПОУ дозволяє перевірити фірму у державних базах.
+        </p>
+      </div>
+    </div>
+
+    <div class="border-t-2 border-ink">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-8 py-8">
+        <div>
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-2">Офіційна назва</div>
+          <div class="font-serif text-[18px] leading-tight" x-text="report?.legal_info?.registered_name || '—'"></div>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-2">ЄДРПОУ</div>
+          <template x-if="report?.legal_info?.edrpou">
+            <a :href="`https://opendatabot.ua/c/${report.legal_info.edrpou}`" target="_blank"
+               class="font-mono text-[20px] text-ink hover:text-clay transition border-b border-ink/40 hover:border-clay">
+              <span x-text="report?.legal_info?.edrpou"></span>
+            </a>
+          </template>
+          <template x-if="!report?.legal_info?.edrpou">
+            <div class="font-serif text-[18px] text-ink3">—</div>
+          </template>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-2">Рік заснування</div>
+          <div class="font-serif font-light text-[36px] leading-none" x-text="report?.legal_info?.year_founded || '—'"></div>
+          <div class="text-[11px] text-ink3 font-mono mt-1" x-show="report?.legal_info?.year_founded"
+               x-text="`${new Date().getFullYear() - (report?.legal_info?.year_founded || 0)} р. на ринку`"></div>
+        </div>
+        <div>
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-2">Розмір команди</div>
+          <div class="font-serif font-light text-[28px] leading-none" x-text="report?.legal_info?.approx_employees || '—'"></div>
+          <div class="text-[11px] uppercase tracking-widest font-mono mt-2"
+               :class="sizeColor(report?.legal_info?.company_size)"
+               x-text="sizeLabel(report?.legal_info?.company_size)"></div>
+        </div>
+      </div>
+
+      <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 pb-6"
+           x-show="report?.legal_info?.employees_source">
+        Джерело даних: <span x-text="report?.legal_info?.employees_source"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive summary -->
+  <div data-anim="r-exec" class="mt-24 grid grid-cols-12 gap-8 items-baseline">
+    <div class="col-span-12 lg:col-span-2">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 02</div>
+    </div>
+    <div class="col-span-12 lg:col-span-10">
+      <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight mb-8">
+        Резюме <span class="italic">для керівника</span><span class="text-clay">.</span>
+      </h3>
+      <p class="font-serif text-[24px] lg:text-[30px] leading-[1.4] tracking-tight max-w-4xl" x-text="report?.executive_summary"></p>
+    </div>
+  </div>
+
+  <!-- PROBLEMS -->
+  <div data-anim="r-problems" class="mt-24">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-12">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 03</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          Що болить<span class="italic">,</span> <span class="italic">і чим лікувати</span><span class="text-clay">.</span>
+        </h3>
+      </div>
+    </div>
+
+    <div class="border-t border-ink/30">
+      <template x-for="(p, idx) in (report?.problems || [])" :key="idx">
+        <article class="problem-row grid grid-cols-12 gap-x-8 gap-y-6 py-12 border-b border-ink/15">
+
+          <!-- Лівий стовпець: номер + severity + опис -->
+          <div class="col-span-12 lg:col-span-7">
+            <div class="flex items-baseline gap-6 mb-4">
+              <div class="font-serif font-light text-[72px] leading-none tracking-tight text-ink"
+                   x-text="String(idx + 1).padStart(2,'0')"></div>
+              <div>
+                <div class="severity-tag" :class="`sev-${p.severity}`">
+                  <span x-text="severityLabel(p.severity)"></span>
+                </div>
+                <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mt-2" x-text="p.category"></div>
+              </div>
+            </div>
+
+            <h4 class="font-serif text-[30px] lg:text-[36px] leading-[1.1] tracking-tight mb-4" x-text="p.title"></h4>
+            <p class="text-[16px] text-ink leading-[1.6] max-w-2xl mb-5" x-text="p.description"></p>
+
+            <div class="border-l-2 border-clay pl-4 max-w-2xl">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-clay mb-1">Доказ</div>
+              <div class="text-[14px] text-ink2 leading-relaxed" x-text="p.evidence"></div>
+            </div>
+          </div>
+
+          <!-- Правий стовпець: послуга -->
+          <div x-show="p.service" class="col-span-12 lg:col-span-5 lg:pl-8 lg:border-l border-ink/15">
+            <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-3">Рекомендована послуга</div>
+            <div class="font-serif text-[28px] leading-[1.1] tracking-tight mb-2" x-text="p.service?.name"></div>
+            <div class="font-mono text-[12px] text-clay mb-5" x-text="p.service?.price_hint"></div>
+
+            <p class="text-[14px] text-ink2 leading-relaxed mb-6" x-text="p.service?.summary"></p>
+
+            <div class="bg-paper2 border border-ink/15 p-5 mb-5">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-2">Можливий КПІ <span class="text-ink3 normal-case tracking-normal">(індикативно)</span></div>
+              <div class="font-serif text-[16px] leading-[1.4] italic" x-text="p.potential_kpi"></div>
+            </div>
+
+            <a :href="p.service?.url" target="_blank" class="link-arrow font-mono text-[12px] uppercase tracking-widest">
+              <span>Дізнатись більше</span>
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5h12M8 1l4 4-4 4" stroke="currentColor" stroke-width="1"/></svg>
+            </a>
+          </div>
+        </article>
+      </template>
+    </div>
+  </div>
+
+  <!-- COMPETITORS -->
+  <div data-anim="r-comp" x-show="hasCompetitors()" class="mt-24">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-8">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 04</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          Бенчмарк <span class="italic">проти ринку</span><span class="text-clay">.</span>
+        </h3>
+      </div>
+    </div>
+
+    <!-- ПОЯСНЕННЯ ЯК ЧИТАТИ -->
+    <div class="grid grid-cols-12 gap-8 mb-10">
+      <div class="col-span-12 lg:col-span-10 lg:col-start-3 bg-paper2 border border-ink/10 p-6">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-3">Як читати дельту</div>
+        <div class="grid sm:grid-cols-3 gap-5 text-[13px] leading-relaxed">
+          <div>
+            <span class="font-mono text-clay font-bold">+10</span>
+            <span class="text-ink"> = конкурент <strong>на 10 балів кращий</strong>.</span>
+            <div class="text-ink3 mt-1 italic">Він виграє, ви маєте розрив.</div>
+          </div>
+          <div>
+            <span class="font-mono text-moss font-bold">−7</span>
+            <span class="text-ink"> = конкурент <strong>на 7 балів гірший</strong>.</span>
+            <div class="text-ink3 mt-1 italic">Ви виграєте, можна посилити перевагу.</div>
+          </div>
+          <div>
+            <span class="font-mono text-ink2 font-bold">±0</span>
+            <span class="text-ink"> = на одному рівні.</span>
+            <div class="text-ink3 mt-1 italic">Жорстка конкуренція за частку.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ПРЯМІ КОНКУРЕНТИ -->
+    <div x-show="(report?.direct_competitors || []).length" class="mb-12">
+      <div class="flex items-baseline gap-4 mb-5">
+        <h4 class="font-serif text-[28px] tracking-tight">Прямі конкуренти<span class="italic">.</span></h4>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-ink3">той самий продукт і сегмент</span>
+      </div>
+
+      <div class="border-t-2 border-ink">
+        <!-- Шапка -->
+        <div class="hidden md:grid grid-cols-12 gap-8 py-3 border-b border-ink/30 font-mono text-[10px] uppercase tracking-widest text-ink2">
+          <div class="col-span-5">Компанія</div>
+          <div class="col-span-5">Скоринг 0–100</div>
+          <div class="col-span-2 text-right">Дельта</div>
+        </div>
+
+        <!-- Аналізована -->
+        <div class="grid grid-cols-12 gap-8 items-center py-6 border-b border-ink/15 bg-paper2/40">
+          <div class="col-span-12 md:col-span-5">
+            <div class="flex items-baseline gap-2 flex-wrap">
+              <div class="font-serif text-[24px] tracking-tight" x-text="report?.company?.name"></div>
+              <span class="text-[9px] uppercase tracking-widest font-mono px-1.5 py-0.5 border border-clay/40 text-clay">аналізована</span>
+            </div>
+          </div>
+          <div class="col-span-8 md:col-span-5">
+            <div class="h-[3px] bg-ink/10 relative">
+              <div class="absolute inset-y-0 left-0 score-fill bg-ink" :style="`width:${report?.overall_score || 0}%`"></div>
+            </div>
+          </div>
+          <div class="col-span-4 md:col-span-2 text-right font-serif text-[32px] leading-none" x-text="report?.overall_score"></div>
+        </div>
+
+        <template x-for="(c, idx) in (report?.direct_competitors || [])" :key="'d'+idx">
+          <div class="grid grid-cols-12 gap-8 items-center py-6 border-b border-ink/15">
+            <div class="col-span-12 md:col-span-5">
+              <div class="font-serif text-[24px] tracking-tight" x-text="c.name"></div>
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1">оцінка AI</div>
+              <div class="text-[13px] text-ink2 max-w-md" x-text="c.note"></div>
+            </div>
+            <div class="col-span-8 md:col-span-5">
+              <div class="h-[3px] bg-ink/10 relative">
+                <div class="absolute inset-y-0 left-0 score-fill bg-ink2" :style="`width:${c.estimated_score || 0}%`"></div>
+              </div>
+            </div>
+            <div class="col-span-4 md:col-span-2 text-right">
+              <div class="font-serif text-[32px] leading-none text-ink2" x-text="c.estimated_score"></div>
+              <div class="font-mono text-[10px] uppercase tracking-widest font-bold"
+                   :class="deltaColor(c.estimated_score)"
+                   x-text="deltaText(c.estimated_score)"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- НЕПРЯМІ КОНКУРЕНТИ -->
+    <div x-show="(report?.indirect_competitors || []).length">
+      <div class="flex items-baseline gap-4 mb-5">
+        <h4 class="font-serif text-[28px] tracking-tight">Непрямі конкуренти<span class="italic">.</span></h4>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-ink3">борються за той самий бюджет/увагу</span>
+      </div>
+
+      <div class="border-t border-ink/30">
+        <template x-for="(c, idx) in (report?.indirect_competitors || [])" :key="'i'+idx">
+          <div class="grid grid-cols-12 gap-8 items-center py-6 border-b border-ink/15">
+            <div class="col-span-12 md:col-span-5">
+              <div class="font-serif text-[22px] italic tracking-tight" x-text="c.name"></div>
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1">оцінка AI · непрямий</div>
+              <div class="text-[13px] text-ink2 max-w-md" x-text="c.note"></div>
+            </div>
+            <div class="col-span-8 md:col-span-5">
+              <div class="h-[3px] bg-ink/10 relative">
+                <div class="absolute inset-y-0 left-0 score-fill bg-ink3" :style="`width:${c.estimated_score || 0}%`"></div>
+              </div>
+            </div>
+            <div class="col-span-4 md:col-span-2 text-right">
+              <div class="font-serif text-[28px] leading-none text-ink3" x-text="c.estimated_score"></div>
+              <div class="font-mono text-[10px] uppercase tracking-widest font-bold"
+                   :class="deltaColor(c.estimated_score)"
+                   x-text="deltaText(c.estimated_score)"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <p class="font-mono text-[10px] uppercase tracking-widest text-ink3 mt-4">
+      Скори конкурентів — оцінка AI. Для точної верифікації — запустіть аналіз кожного окремо.
+    </p>
+  </div>
+
+  <!-- ============ ДЖЕРЕЛА ДАНИХ ============ -->
+  <div data-anim="r-sources" class="mt-24">
+    <div class="grid grid-cols-12 gap-8 items-baseline mb-12">
+      <div class="col-span-12 lg:col-span-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2">§ 05</div>
+      </div>
+      <div class="col-span-12 lg:col-span-10">
+        <h3 class="font-serif font-light text-[40px] lg:text-[56px] leading-tight tracking-tight">
+          Джерела <span class="italic">даних</span><span class="text-clay">.</span>
+        </h3>
+        <p class="font-serif text-[18px] text-ink2 mt-3 italic max-w-2xl">
+          Прозорість понад усе: ось що скрапер знайшов і де модель шукала через Google Search.
+          Якщо щось не знайдено — модель ймовірно базувалась на загальних знаннях.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-8 border-t-2 border-ink pt-8">
+
+      <!-- Скрапер: офіційний сайт + сторінки -->
+      <div class="col-span-12 lg:col-span-6 lg:border-r border-ink/15 lg:pr-8">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-5">A. Власний скрапер</div>
+
+        <!-- Сайт -->
+        <div class="py-4 border-b border-ink/15">
+          <div class="text-[10px] uppercase tracking-widest text-ink3 mb-1">Офіційний сайт</div>
+          <template x-if="report?._meta?.website_found">
+            <a :href="report._meta.website_found" target="_blank" class="link-arrow font-serif text-[18px] break-all">
+              <span x-text="report._meta.website_found"></span>
+              <svg width="12" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5h12M8 1l4 4-4 4" stroke="currentColor" stroke-width="1"/></svg>
+            </a>
+          </template>
+          <template x-if="!report?._meta?.website_found">
+            <div class="font-serif text-[16px] italic text-clay">не знайдено автоматично</div>
+          </template>
+        </div>
+
+        <!-- Кар'єрна -->
+        <div class="py-4 border-b border-ink/15">
+          <div class="text-[10px] uppercase tracking-widest text-ink3 mb-1">Кар'єрна сторінка</div>
+          <template x-if="report?._meta?.careers_url">
+            <a :href="report._meta.careers_url" target="_blank" class="link-arrow font-serif text-[16px] break-all">
+              <span x-text="report._meta.careers_url"></span>
+            </a>
+          </template>
+          <template x-if="!report?._meta?.careers_url">
+            <div class="font-serif text-[15px] italic text-clay">не знайдено на сайті</div>
+          </template>
+        </div>
+
+        <!-- Про нас -->
+        <div class="py-4 border-b border-ink/15">
+          <div class="text-[10px] uppercase tracking-widest text-ink3 mb-1">«Про компанію»</div>
+          <template x-if="report?._meta?.about_url">
+            <a :href="report._meta.about_url" target="_blank" class="link-arrow font-serif text-[16px] break-all">
+              <span x-text="report._meta.about_url"></span>
+            </a>
+          </template>
+          <template x-if="!report?._meta?.about_url">
+            <div class="font-serif text-[15px] italic text-ink3">не знайдено</div>
+          </template>
+        </div>
+
+        <!-- DOU.ua -->
+        <div class="py-4 border-b border-ink/15">
+          <div class="text-[10px] uppercase tracking-widest text-ink3 mb-1">DOU.ua · профіль роботодавця</div>
+          <template x-if="report?._meta?.dou_url">
+            <a :href="report._meta.dou_url" target="_blank" class="link-arrow font-serif text-[16px] break-all">
+              <span x-text="report._meta.dou_url"></span>
+            </a>
+          </template>
+          <template x-if="!report?._meta?.dou_url">
+            <div class="font-serif text-[15px] italic text-clay">профіль не виявлено</div>
+          </template>
+        </div>
+
+        <!-- Новини -->
+        <div class="py-4">
+          <div class="text-[10px] uppercase tracking-widest text-ink3 mb-2">
+            Згадки в медіа · <span class="font-mono">Google News</span>
+            (<span x-text="(report?._meta?.news_items || []).length"></span>)
+          </div>
+          <template x-if="(report?._meta?.news_items || []).length === 0">
+            <div class="font-serif text-[15px] italic text-ink3">не знайдено</div>
+          </template>
+          <ul class="space-y-3">
+            <template x-for="(n, idx) in (report?._meta?.news_items || []).slice(0, 8)" :key="idx">
+              <li class="text-[13px] text-ink leading-snug border-l-2 pl-3 py-1"
+                  :style="`border-color:${sentimentColor(n.sentiment)}`">
+                <div class="flex items-baseline gap-2 flex-wrap">
+                  <span class="sentiment-dot" :class="`sd-${n.sentiment || 'neutral'}`"
+                        :title="n.sentiment_reason || ''"></span>
+                  <a :href="n.link" target="_blank" class="font-serif hover:text-clay transition" x-text="n.title"></a>
+                  <span class="text-ink3 font-mono text-[10px] uppercase tracking-wider whitespace-nowrap" x-text="n.source"></span>
+                </div>
+                <div class="text-[11px] text-ink3 italic mt-0.5" x-show="n.sentiment_reason" x-text="n.sentiment_reason"></div>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </div>
+
+      <!-- AI пошукові джерела -->
+      <div class="col-span-12 lg:col-span-6 lg:pl-8">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-5">
+          B. Веб-пошук від AI
+        </div>
+
+        <template x-if="(report?._meta?.grounding_sources || []).length === 0">
+          <div class="py-4 font-serif italic text-[15px] text-ink2 leading-relaxed">
+            AI не виконував окремих пошукових запитів — даних від скрапера вистачило.
+            Це нормально для відомих брендів. Для маловідомих — вкажіть сайт вручну.
+          </div>
+        </template>
+
+        <ul class="divide-y divide-ink/10">
+          <template x-for="(s, idx) in (report?._meta?.grounding_sources || [])" :key="idx">
+            <li class="py-3">
+              <div class="text-[10px] uppercase tracking-widest text-ink3 mb-1 font-mono">
+                <span x-text="String(idx+1).padStart(2,'0')"></span>
+              </div>
+              <a :href="s.uri" target="_blank" class="block font-serif text-[16px] hover:text-clay transition">
+                <span x-text="s.title || s.uri"></span>
+              </a>
+              <div class="text-[11px] text-ink3 font-mono break-all mt-1" x-text="s.uri"></div>
+            </li>
+          </template>
+        </ul>
+
+        <!-- Спроби пошуку домену -->
+        <template x-if="(report?._meta?.candidates_tried || []).length">
+          <details class="mt-6">
+            <summary class="font-mono text-[10px] uppercase tracking-widest text-ink3 cursor-pointer hover:text-ink">
+              Спроби автопошуку домену (<span x-text="(report?._meta?.candidates_tried || []).length"></span>)
+            </summary>
+            <ul class="mt-3 space-y-1">
+              <template x-for="(u, idx) in (report?._meta?.candidates_tried || [])" :key="idx">
+                <li class="font-mono text-[11px] text-ink3 break-all" x-text="u"></li>
+              </template>
+            </ul>
+          </details>
+        </template>
+
+        <!-- Помилки скрапера -->
+        <template x-if="(report?._meta?.errors || []).length">
+          <div class="mt-6 pt-4 border-t border-clay/30">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-clay mb-2">Зауваження</div>
+            <ul class="space-y-1">
+              <template x-for="(e, idx) in (report?._meta?.errors || [])" :key="idx">
+                <li class="text-[13px] text-ink2 leading-snug" x-text="e"></li>
+              </template>
+            </ul>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disclaimer + CTA -->
+  <div data-anim="r-foot" class="mt-24 pt-12 border-t border-ink/30 grid grid-cols-12 gap-8">
+    <div class="col-span-12 lg:col-span-7">
+      <div class="font-mono text-[11px] uppercase tracking-widest text-clay mb-3">Важливо</div>
+      <p class="font-serif text-[18px] leading-[1.5] text-ink2 italic" x-text="report?.disclaimer"></p>
+    </div>
+    <div class="col-span-12 lg:col-span-5 lg:pl-8 lg:border-l border-ink/15 flex flex-col gap-4">
+      <a href="https://stud-point.com/services/partner/#partnerbtn" target="_blank" class="btn-ink justify-center">
+        Обговорити партнерство
+        <svg width="18" height="14" viewBox="0 0 24 18" fill="none"><path d="M1 9h22M16 1l8 8-8 8" stroke="currentColor" stroke-width="1.5"/></svg>
+      </a>
+      <button @click="reset()" class="btn-ghost justify-center">Аналізувати іншу компанію</button>
+    </div>
+  </div>
+
+  <details class="mt-16 font-mono text-[11px] text-ink3">
+    <summary class="cursor-pointer uppercase tracking-widest hover:text-ink">Сирий JSON-meta (для debug)</summary>
+    <pre class="mt-2 whitespace-pre-wrap" x-text="JSON.stringify(report?._meta, null, 2)"></pre>
+  </details>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="border-t border-ink/15 mt-16">
+  <div class="max-w-[1400px] mx-auto px-6 lg:px-12 py-6 flex flex-wrap items-center justify-between gap-4 text-[11px] uppercase tracking-[0.22em] text-ink2">
+    <div>© Stud-Point · Business Intelligence</div>
+    <div class="text-ink3">Інформація — з відкритих джерел. Не є офертою.</div>
+  </div>
+</footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
