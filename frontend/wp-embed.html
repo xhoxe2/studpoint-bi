@@ -1,0 +1,334 @@
+<!--
+  ============================================================
+  STUD-POINT AI Business Intelligence — WordPress embed
+  ============================================================
+
+  1. У twоєму WP створи нову сторінку (Pages → Add New)
+  2. Заголовок: «Бізнес-Аналізатор» або як хочеш
+  3. Додай блок Custom HTML (Gutenberg) або HTML-віджет
+  4. ВСТАВ ВЕСЬ ЦЕЙ ФАЙЛ
+  5. ЗАМІНИ рядок BACKEND_URL нижче на свій Render/Railway URL
+  6. Опублікуй
+
+  Все. Бекенд має бути уже задеплоєним на Render/Railway з CORS=*
+  (вже налаштовано у backend/main.py).
+============================================================
+-->
+
+<!-- ⚙️ КОНФІГУРАЦІЯ: заміни на свій URL після деплою бекенда -->
+<!-- Приклад: https://studpoint-bi.onrender.com -->
+<link rel="stylesheet" href="https://BACKEND_URL/wp.css">
+
+<!-- Шрифти (одноразове підключення Google Fonts) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..800,0..100;1,9..144,300..800,0..100&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind з вимкненим preflight (щоб не ламати WP-тему) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    corePlugins: { preflight: false },
+    important: '.studpoint-bi-app',
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['Fraunces', 'Georgia', 'serif'],
+          sans:  ['Geist', 'sans-serif'],
+          mono:  ['"JetBrains Mono"', 'monospace'],
+        },
+        colors: {
+          paper:  '#ffffff',
+          paper2: '#f6f6f4',
+          ink:    '#18181b',
+          ink2:   '#52525b',
+          ink3:   '#a1a1aa',
+          clay:   '#8b3a1f',
+          ochre:  '#b8862f',
+          moss:   '#2d5a3d',
+        },
+      },
+    },
+  }
+</script>
+
+<!-- Alpine.js для реактивності + GSAP для анімацій -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<!-- ========== САМ АНАЛІЗАТОР ========== -->
+<div class="studpoint-bi-app" x-data="analyzer()" x-cloak>
+
+  <!-- HERO -->
+  <section x-show="view === 'hero'" x-transition.opacity.duration.400ms class="pt-4 pb-12">
+    <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-8">
+      Випуск № <span class="font-mono" x-text="issueNumber()"></span> · AI Бізнес-Аналітика
+    </div>
+
+    <h1 class="font-serif font-light leading-[0.95] tracking-[-0.02em] text-[44px] sm:text-6xl lg:text-7xl mb-10">
+      Анатомія<br/>
+      <span class="italic font-normal">компанії<span class="text-clay">.</span></span>
+    </h1>
+
+    <div class="grid grid-cols-12 gap-8 items-start">
+      <div class="col-span-12 lg:col-span-5">
+        <div class="h-px bg-ink mb-6"></div>
+        <p class="font-serif text-[20px] lg:text-[22px] leading-[1.45] text-ink2 max-w-md">
+          Введіть назву — отримаєте редакційний звіт: скоринг&nbsp;0–100, п'ять напрямів,
+          реальні проблеми з доказами, бенчмарк проти конкурентів і рекомендації послуг Stud-Point.
+        </p>
+      </div>
+
+      <div class="col-span-12 lg:col-span-7 lg:pl-8">
+        <form @submit.prevent="run()" class="space-y-6">
+          <label class="block">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">01 — Компанія</div>
+            <input x-model="company" type="text" placeholder="Київстар, Сільпо, Monobank…"
+                   class="ed-input font-serif text-[36px] lg:text-[44px]" autofocus />
+          </label>
+          <label class="block">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">02 — Сайт <span class="text-ink3 normal-case tracking-normal">(опціонально)</span></div>
+            <input x-model="website" type="text" placeholder="example.com"
+                   class="ed-input font-mono text-[18px]" />
+          </label>
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+            <button type="submit" :disabled="!company.trim()" class="btn-ink">
+              <span>Сформувати звіт</span>
+              <svg width="18" height="14" viewBox="0 0 24 18" fill="none"><path d="M1 9h22M16 1l8 8-8 8" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button type="button" @click="openCompare()" class="btn-ghost">Порівняти 2 компанії</button>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-ink2">або:</div>
+            <div class="flex flex-wrap gap-3">
+              <template x-for="ex in ['Київстар','Нова Пошта','Сільпо','Monobank']">
+                <button @click="company = ex; run()" class="chip-ed" x-text="ex"></button>
+              </template>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <section x-show="view === 'loading'" x-transition.opacity.duration.300ms class="py-20">
+    <div class="grid grid-cols-12 gap-8 items-end mb-12">
+      <div class="col-span-12 lg:col-span-7">
+        <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-4">Звіт формується</div>
+        <h2 class="font-serif font-light text-[44px] lg:text-[64px] leading-[0.95]">
+          <span x-text="company"></span><span class="italic text-clay">.</span>
+        </h2>
+      </div>
+      <div class="col-span-12 lg:col-span-5">
+        <div class="flex items-baseline justify-between mb-3">
+          <div class="font-mono text-[12px] text-ink2 uppercase tracking-widest" x-text="loadingStep"></div>
+          <div class="font-mono text-[12px] text-ink3 uppercase tracking-widest">
+            <span x-text="String(elapsedSec).padStart(2,'0')"></span>с
+          </div>
+        </div>
+        <div class="h-px bg-ink/15 relative overflow-hidden">
+          <div class="absolute inset-y-0 left-0 load-bar"></div>
+        </div>
+        <div class="mt-3 text-[13px] text-ink2 italic font-serif" x-text="loadingHint()"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ERROR -->
+  <section x-show="view === 'error'" class="py-20 text-center max-w-2xl mx-auto">
+    <div class="text-[11px] uppercase tracking-[0.32em] text-clay mb-3">Помилка</div>
+    <h2 class="font-serif italic text-3xl mb-5">Не вдалося сформувати звіт.</h2>
+    <p class="text-ink2 mb-8" x-text="error"></p>
+    <button @click="reset()" class="btn-ink">Спробувати ще</button>
+  </section>
+
+  <!-- COMPARE FORM -->
+  <section x-show="view === 'compare-form'" class="py-12">
+    <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-4">Порівняння двох компаній</div>
+    <h2 class="font-serif font-light text-[44px] lg:text-[64px] leading-[0.95] mb-10">
+      Хто <span class="italic">сильніший</span><span class="text-clay">?</span>
+    </h2>
+    <form @submit.prevent="runCompare()" class="grid md:grid-cols-2 gap-8">
+      <label class="block">
+        <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">Компанія A</div>
+        <input x-model="compareA" type="text" placeholder="напр. Sense Bank" class="ed-input font-serif text-[32px]" autofocus />
+      </label>
+      <label class="block">
+        <div class="text-[11px] uppercase tracking-[0.22em] text-ink2 mb-3">Компанія B</div>
+        <input x-model="compareB" type="text" placeholder="напр. Monobank" class="ed-input font-serif text-[32px]" />
+      </label>
+      <div class="md:col-span-2 flex flex-wrap gap-4 pt-3">
+        <button type="submit" :disabled="!compareA.trim() || !compareB.trim()" class="btn-ink">Порівняти →</button>
+        <button type="button" @click="view='hero'" class="btn-ghost">скасувати</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- RESULTS (повністю) -->
+  <section x-show="view === 'results' && report" class="pt-4 pb-12">
+    <!-- Banner -->
+    <div class="mb-8 py-4 px-5 border-t border-b border-ink/20 bg-paper2/60 flex flex-wrap items-baseline gap-3" x-show="report?._meta?.website_found">
+      <span class="font-mono text-[10px] uppercase tracking-widest text-ink2">Аналізую сайт</span>
+      <template x-if="!websiteEdit">
+        <div class="flex items-baseline gap-3 flex-wrap">
+          <a :href="report?._meta?.website_found" target="_blank" class="font-serif text-[18px] border-b border-ink/40" x-text="report?._meta?.website_found"></a>
+          <span class="font-mono text-[10px] uppercase tracking-widest" :class="websiteSourceColor()" x-text="websiteSourceLabel()"></span>
+          <button @click="startWebsiteEdit()" class="font-mono text-[10px] uppercase tracking-widest text-ink2 border-b border-ink/40 ml-auto">Не той сайт?</button>
+        </div>
+      </template>
+      <template x-if="websiteEdit">
+        <div class="flex items-baseline gap-3 flex-wrap w-full">
+          <input x-model="websiteEditValue" type="text" placeholder="https://..." class="ed-input flex-1 font-mono text-[16px]" @keydown.enter="reanalyzeWithUrl()" />
+          <button @click="reanalyzeWithUrl()" class="btn-ink">Перезапустити</button>
+          <button @click="websiteEdit=false" class="btn-ghost">скасувати</button>
+        </div>
+      </template>
+    </div>
+
+    <!-- Screenshot -->
+    <div class="mb-10" x-show="report?._meta?.website_found">
+      <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-2">Скріншот головної</div>
+      <div class="border border-ink/15 bg-paper2 overflow-hidden">
+        <img :src="siteScreenshot()" :alt="report?.company?.name" class="block w-full" loading="lazy" onerror="this.parentElement.style.display='none'" />
+      </div>
+    </div>
+
+    <!-- Cover -->
+    <div class="grid grid-cols-12 gap-8 pb-10 border-b border-ink/30">
+      <div class="col-span-12 lg:col-span-7">
+        <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-4">
+          Звіт № <span class="font-mono" x-text="issueNumber()"></span> · <span x-text="dateString()"></span>
+        </div>
+        <h2 class="font-serif font-light text-[56px] lg:text-[80px] leading-[0.92] tracking-[-0.02em] mb-6">
+          <span x-text="report?.company?.name"></span><span class="italic text-clay">.</span>
+        </h2>
+        <div class="font-mono text-[11px] uppercase tracking-widest text-ink2 mb-4">
+          <span x-text="report?.company?.industry"></span>
+          <span class="text-ink3 mx-2">/</span>
+          <span x-text="report?.company?.country"></span>
+        </div>
+        <p class="font-serif text-[18px] lg:text-[20px] leading-[1.5] max-w-xl" x-text="report?.company?.summary"></p>
+      </div>
+      <div class="col-span-12 lg:col-span-5 lg:pl-8 lg:border-l border-ink/15">
+        <div class="text-[11px] uppercase tracking-[0.32em] text-ink2 mb-4">Загальний бал</div>
+        <div class="flex items-baseline gap-5 mb-4">
+          <div class="font-serif font-light text-[140px] lg:text-[180px] leading-[0.8] tracking-[-0.04em]" :style="`color:${scoreColor(report?.overall_score || 0)}`">
+            <span x-text="report?.overall_score ?? '—'"></span>
+          </div>
+          <div class="font-mono text-[14px] text-ink2 pb-4">/100</div>
+        </div>
+        <div class="h-px bg-ink/15 relative">
+          <div class="absolute inset-y-0 left-0 score-fill" :style="`width:${report?.overall_score || 0}%; height:2px; top:-0.5px; background:${scoreColor(report?.overall_score || 0)}`"></div>
+        </div>
+        <div class="mt-3 font-mono text-[11px] uppercase tracking-widest text-ink2" x-text="scoreVerdict(report?.overall_score || 0)"></div>
+      </div>
+    </div>
+
+    <!-- 5 scores -->
+    <div class="mt-16">
+      <h3 class="font-serif font-light text-[32px] lg:text-[48px] mb-8">П'ять напрямів<span class="italic">.</span></h3>
+      <div class="border-t border-ink/30">
+        <template x-for="cat in categoryList()" :key="cat.key">
+          <div class="score-row grid grid-cols-12 gap-6 py-6 border-b border-ink/15 items-center">
+            <div class="col-span-12 lg:col-span-3">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1" x-text="cat.num"></div>
+              <div class="font-serif text-[24px]" x-text="cat.label"></div>
+            </div>
+            <div class="col-span-7 lg:col-span-6">
+              <div class="h-[2px] bg-ink/10 relative">
+                <div class="absolute inset-y-0 left-0 score-fill" :style="`width:${report?.scores?.[cat.key] || 0}%; background:${scoreColor(report?.scores?.[cat.key] || 0)}`"></div>
+              </div>
+              <div class="text-[13px] text-ink2 mt-2 max-w-xl" x-text="report?.score_reasoning?.[cat.key]"></div>
+            </div>
+            <div class="col-span-5 lg:col-span-3 text-right">
+              <div class="font-serif font-light text-[52px] leading-[0.9]" :style="`color:${scoreColor(report?.scores?.[cat.key] || 0)}`" x-text="report?.scores?.[cat.key] ?? '—'"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Executive -->
+    <div class="mt-16 pb-4">
+      <h3 class="font-serif font-light text-[32px] lg:text-[48px] mb-6">Резюме <span class="italic">для керівника</span><span class="text-clay">.</span></h3>
+      <p class="font-serif text-[20px] lg:text-[26px] leading-[1.4] max-w-4xl" x-text="report?.executive_summary"></p>
+    </div>
+
+    <!-- Problems -->
+    <div class="mt-16">
+      <h3 class="font-serif font-light text-[32px] lg:text-[48px] mb-8">Що болить<span class="italic">,</span> <span class="italic">і чим лікувати</span><span class="text-clay">.</span></h3>
+      <div class="border-t border-ink/30">
+        <template x-for="(p, idx) in (report?.problems || [])" :key="idx">
+          <article class="problem-row grid grid-cols-12 gap-6 py-10 border-b border-ink/15">
+            <div class="col-span-12 lg:col-span-7">
+              <div class="flex items-baseline gap-5 mb-3 flex-wrap">
+                <div class="font-serif font-light text-[56px] leading-none" x-text="String(idx+1).padStart(2,'0')"></div>
+                <div>
+                  <div class="severity-tag" :class="`sev-${p.severity}`" x-text="severityLabel(p.severity)"></div>
+                  <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mt-1" x-text="p.category"></div>
+                </div>
+              </div>
+              <h4 class="font-serif text-[24px] lg:text-[28px] leading-[1.15] mb-3" x-text="p.title"></h4>
+              <p class="text-[15px] leading-[1.6] mb-4 max-w-2xl" x-text="p.description"></p>
+              <div class="border-l-2 border-clay pl-3 max-w-2xl">
+                <div class="font-mono text-[9px] uppercase tracking-widest text-clay mb-1">Доказ</div>
+                <div class="text-[13px] text-ink2" x-text="p.evidence"></div>
+              </div>
+            </div>
+            <div x-show="p.service" class="col-span-12 lg:col-span-5 lg:pl-6 lg:border-l border-ink/15">
+              <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-2">Рекомендована послуга</div>
+              <div class="font-serif text-[22px] leading-[1.1] mb-1" x-text="p.service?.name"></div>
+              <div class="font-mono text-[11px] text-clay mb-3" x-text="p.service?.price_hint"></div>
+              <p class="text-[13px] text-ink2 mb-4" x-text="p.service?.summary"></p>
+              <div class="bg-paper2 border border-ink/15 p-4 mb-4">
+                <div class="font-mono text-[9px] uppercase tracking-widest text-ink2 mb-2">Можливий КПІ <span class="text-ink3 normal-case tracking-normal">(індикативно)</span></div>
+                <div class="font-serif text-[14px] italic" x-text="p.potential_kpi"></div>
+              </div>
+              <a :href="p.service?.url" target="_blank" class="link-arrow font-mono text-[11px] uppercase tracking-widest">
+                <span>Дізнатись більше</span>
+                <svg width="12" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5h12M8 1l4 4-4 4" stroke="currentColor" stroke-width="1"/></svg>
+              </a>
+            </div>
+          </article>
+        </template>
+      </div>
+    </div>
+
+    <!-- Disclaimer + CTA -->
+    <div class="mt-16 pt-10 border-t border-ink/30 grid grid-cols-12 gap-6">
+      <div class="col-span-12 lg:col-span-7">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-clay mb-2">Важливо</div>
+        <p class="font-serif italic text-[15px] text-ink2 max-w-xl" x-text="report?.disclaimer"></p>
+      </div>
+      <div class="col-span-12 lg:col-span-5 lg:pl-6 lg:border-l border-ink/15 flex flex-col gap-3">
+        <a href="https://stud-point.com/services/partner/#partnerbtn" target="_blank" class="btn-ink">Обговорити партнерство →</a>
+        <button @click="reset()" class="btn-ghost">Аналізувати іншу компанію</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARE RESULTS — спрощений варіант -->
+  <section x-show="view === 'compare-results' && compareData" class="pt-4 pb-12">
+    <div class="grid grid-cols-2 gap-8 lg:gap-12 mb-8">
+      <template x-for="(rep, side) in {A: compareData?.A, B: compareData?.B}" :key="side">
+        <div>
+          <div class="font-mono text-[10px] uppercase tracking-widest text-ink3 mb-1">Сторона <span x-text="side"></span></div>
+          <div class="font-serif font-light text-[36px] lg:text-[48px] leading-[0.9] mb-3"><span x-text="rep?.company?.name || '—'"></span><span class="italic text-clay">.</span></div>
+          <div class="flex items-baseline gap-3 mb-4">
+            <div class="font-serif font-light text-[64px]" :style="`color:${scoreColor(rep?.overall_score || 0)}`" x-text="rep?.overall_score ?? '—'"></div>
+            <div class="font-mono text-[12px] text-ink2 pb-2">/100</div>
+          </div>
+          <div class="text-[13px] text-ink2" x-text="rep?.company?.summary"></div>
+        </div>
+      </template>
+    </div>
+    <div class="bg-paper2 border border-ink/15 p-5 mb-8">
+      <div class="font-mono text-[10px] uppercase tracking-widest text-ink2 mb-2">Підсумок</div>
+      <div class="font-serif text-[18px] lg:text-[22px] leading-[1.3]" x-html="compareVerdict()"></div>
+    </div>
+    <button @click="reset()" class="btn-ghost">← Новий аналіз</button>
+  </section>
+
+</div>
+
+<!-- Логіка аналізатора (бекенд URL береться автоматично з URL цього скрипта) -->
+<script src="https://BACKEND_URL/wp.js"></script>

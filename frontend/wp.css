@@ -1,0 +1,183 @@
+/* =========================================================
+   STUD-POINT AI Business Intelligence — WordPress embed
+   Усі стилі scoped під .studpoint-bi-app щоб НЕ ламати WP-тему.
+   ========================================================= */
+
+.studpoint-bi-app {
+  --paper:  #ffffff;
+  --paper2: #f6f6f4;
+  --ink:    #18181b;
+  --ink2:   #52525b;
+  --ink3:   #a1a1aa;
+  --clay:   #8b3a1f;
+  --ochre:  #b8862f;
+  --moss:   #2d5a3d;
+
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  line-height: 1.5;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+.studpoint-bi-app *,
+.studpoint-bi-app *::before,
+.studpoint-bi-app *::after { box-sizing: border-box; }
+
+.studpoint-bi-app [x-cloak] { display: none !important; }
+
+.studpoint-bi-app .font-serif { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "opsz" 144, "SOFT" 50; }
+.studpoint-bi-app .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.studpoint-bi-app .font-sans { font-family: 'Geist', sans-serif; }
+
+/* ===== Inputs ===== */
+.studpoint-bi-app .ed-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  padding: 0.4rem 0 0.6rem;
+  outline: none;
+  color: var(--ink);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  transition: border-color 0.3s, color 0.3s;
+}
+.studpoint-bi-app .ed-input::placeholder { color: var(--ink3); font-style: italic; font-weight: 300; }
+.studpoint-bi-app .ed-input:focus { border-color: var(--clay); }
+
+/* ===== Buttons ===== */
+.studpoint-bi-app .btn-ink {
+  display: inline-flex; align-items: center; gap: 0.85rem;
+  padding: 1rem 1.6rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Geist', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  border-radius: 0;
+  text-decoration: none;
+}
+.studpoint-bi-app .btn-ink:hover:not(:disabled) { background: var(--clay); border-color: var(--clay); color: var(--paper); }
+.studpoint-bi-app .btn-ink:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.studpoint-bi-app .btn-ghost {
+  display: inline-flex; align-items: center; gap: 0.85rem;
+  padding: 1rem 1.6rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: 'Geist', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  border-radius: 0;
+  text-decoration: none;
+}
+.studpoint-bi-app .btn-ghost:hover { background: var(--ink); color: var(--paper); }
+
+.studpoint-bi-app .chip-ed {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink2);
+  border-bottom: 1px solid var(--ink2);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.studpoint-bi-app .chip-ed:hover { color: var(--clay); border-color: var(--clay); }
+
+/* ===== Severity / sentiment ===== */
+.studpoint-bi-app .severity-tag {
+  display: inline-flex; align-items: center;
+  font-family: 'Geist', sans-serif;
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid currentColor;
+}
+.studpoint-bi-app .sev-high   { color: var(--clay); }
+.studpoint-bi-app .sev-medium { color: var(--ochre); }
+.studpoint-bi-app .sev-low    { color: var(--moss); }
+
+.studpoint-bi-app .sentiment-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.studpoint-bi-app .sd-positive { background: var(--moss); }
+.studpoint-bi-app .sd-negative { background: var(--clay); }
+.studpoint-bi-app .sd-neutral  { background: var(--ink3); }
+
+/* ===== Анімації ===== */
+.studpoint-bi-app .score-fill { transition: width 1.4s cubic-bezier(.2,.7,.2,1); }
+.studpoint-bi-app .load-bar {
+  width: 30%; height: 100%;
+  animation: spbi-load 1.8s cubic-bezier(.4,.0,.2,1) infinite;
+  background: var(--ink);
+}
+@keyframes spbi-load {
+  0%   { transform: translateX(-100%); width: 20%; }
+  50%  { width: 45%; }
+  100% { transform: translateX(340%); width: 20%; }
+}
+
+.studpoint-bi-app .score-row,
+.studpoint-bi-app .problem-row { transition: background-color 0.3s; }
+.studpoint-bi-app .score-row:hover { background-color: rgba(0,0,0,0.025); }
+.studpoint-bi-app .problem-row:hover { background-color: rgba(139,58,31,0.025); }
+
+/* ===== Link styles ===== */
+.studpoint-bi-app a { color: inherit; text-decoration: none; }
+.studpoint-bi-app a.link-arrow {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 0.2rem;
+  transition: color 0.2s, border-color 0.2s, gap 0.25s;
+}
+.studpoint-bi-app a.link-arrow:hover { color: var(--clay); border-color: var(--clay); gap: 0.9rem; }
+
+/* ===== Помічні текстові класи (доповнюємо tailwind-utility, бо preflight вимкнено) ===== */
+.studpoint-bi-app .line-clamp-3 {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ===== Headings reset (щоб WP заголовки не ламали наші) ===== */
+.studpoint-bi-app h1, .studpoint-bi-app h2, .studpoint-bi-app h3, .studpoint-bi-app h4 {
+  font-weight: inherit;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  color: inherit;
+}
+.studpoint-bi-app p { margin: 0; }
+.studpoint-bi-app ul { list-style: none; padding: 0; margin: 0; }
+
+/* ===== Focus a11y ===== */
+.studpoint-bi-app button:focus-visible,
+.studpoint-bi-app a:focus-visible,
+.studpoint-bi-app input:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 4px;
+}
+
+/* ===== Smaller-than-tailwind utility — мінімально потрібне якщо Tailwind не завантажиться ===== */
+.studpoint-bi-app .sp-grid { display: grid; gap: 2rem; }
+@media (min-width: 768px)  { .studpoint-bi-app .sp-md-2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .studpoint-bi-app .sp-lg-3 { grid-template-columns: repeat(3, 1fr); } }
